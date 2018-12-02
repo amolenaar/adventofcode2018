@@ -20,8 +20,17 @@ end)
 |> IO.inspect(label: "Part One")
 
 
-input
-|> Stream.flat_map(fn (c) -> input |> Enum.map(&({c, &1})) end)
+# Index the steam, so we can skip duplicates
+# when constructing all possible combinations
+combinations = input
+|> Stream.with_index()
+|> Stream.flat_map(fn ({c, i}) ->
+  input
+  |> Stream.drop(i)
+  |> Enum.map(&({c, &1}))
+end)
+
+combinations
 |> Stream.map(fn {a, b} -> String.myers_difference(a, b) end)
 |> Enum.filter(fn
   # Find the lines where the difference is only one character
@@ -30,6 +39,6 @@ input
   [del: <<_>>, ins: <<_>>, eq: _] -> true
   _ -> false
 end)
+|> Enum.map(fn [eq: s1, del: _, ins: _, eq: s2] -> s1 <> s2 end)
 |> hd()
-|> (fn [eq: s1, del: _, ins: _, eq: s2] -> s1 <> s2 end).()
 |> IO.inspect(label: "Part Two")
