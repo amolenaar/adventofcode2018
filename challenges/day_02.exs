@@ -30,10 +30,10 @@ combinations = input
   |> Enum.map(&({c, &1}))
 end)
 
+# Find the lines where the difference is only one character
 combinations
 |> Stream.map(fn {a, b} -> String.myers_difference(a, b) end)
 |> Enum.filter(fn
-  # Find the lines where the difference is only one character
   [eq: _, del: <<_>>, ins: <<_>>, eq: _] -> true
   [eq: _, del: <<_>>, ins: <<_>>] -> true
   [del: <<_>>, ins: <<_>>, eq: _] -> true
