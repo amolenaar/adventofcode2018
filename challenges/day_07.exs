@@ -1,13 +1,42 @@
 #!/usr/bin/env elixir
 
 defmodule Day7 do
-  def construct_previous_step(step, steps) do
-    before = steps
-    |> Enum.filter(fn ({b, a}) -> a == step end)
-    |> Enum.map(&(elem(&1, 0)))
-    |> Enum.sort(&(&1 >= &2))
-    |> Enum.map(&(construct_previous_step(&1, steps)))
-    [step, before]
+
+  def prerequisite(steps, prereqs), do: prerequisite(steps, prereqs, [])
+
+  def prerequisite(steps, [{before_step, after_step} | rest], done ) do
+    index_before_step = Enum.find_index(steps, fn (e) -> e == before_step end)
+    index_after_step = Enum.find_index(steps, fn (e) -> e == after_step end)
+    if index_before_step > index_after_step do
+      not_after = done
+      |> Enum.filter(fn ({b, _a}) -> b == after_step end)
+      |> Enum.map(&(elem(&1, 1)))
+      |> MapSet.new
+      new_steps = steps
+      |> insert_alphabetically(index_before_step + 1, after_step, not_after)
+      |> List.replace_at(index_after_step, "")
+      prerequisite(new_steps, rest, [{before_step, after_step} | done])
+    else
+      prerequisite(steps, rest, [{before_step, after_step} | done])
+    end
+  end
+
+  def prerequisite(steps, [], _) do
+    steps
+  end
+
+  def insert_alphabetically(steps, index, step, not_after) do
+    s = Enum.at(steps, index)
+    cond do
+      s == nil ->
+        steps ++ [step]
+      MapSet.member?(not_after, s) ->
+        List.insert_at(steps, index, step)
+      s < step ->
+        insert_alphabetically(steps, index + 1, step, not_after)
+      true ->
+        List.insert_at(steps, index, step)
+    end
   end
 end
 
@@ -21,31 +50,31 @@ input = File.stream!("day_07_input.txt")
   end)
   |> Enum.to_list
 
-first_steps = input
-|> Enum.map(&Tuple.to_list/1)
-|> Enum.zip
-|> Enum.map(&Tuple.to_list/1)
-|> (fn ([before_steps, after_steps]) ->
-  Enum.reject(before_steps, fn (step) -> Enum.find(after_steps, fn (s) -> s == step end) end)
-end).()
-|> Enum.sort
-|> Enum.uniq
-|> IO.inspect(label: "First steps")
+all_steps =
+  input
+  |> Enum.map(&Tuple.to_list/1)
+  |> List.flatten
+  |> Enum.uniq
+  |> Enum.sort
+  |> IO.inspect(label: "All steps")
 
-last_steps = input
-|> Enum.map(&Tuple.to_list/1)
-|> Enum.zip
-|> Enum.map(&Tuple.to_list/1)
-|> (fn ([before_steps, after_steps]) ->
-  Enum.reject(after_steps, fn (step) -> Enum.find(before_steps, fn (s) -> s == step end) end)
-end).()
-|> Enum.sort
-|> Enum.uniq
-
-last_steps
-|> Enum.map(&(Day7.construct_previous_step(&1, input)))
-|> List.flatten()
-|> Enum.reverse
-|> Enum.uniq
+Day7.prerequisite(all_steps, input)
+|> Day7.prerequisite(input)
 |> Enum.join("")
 |> IO.inspect(label: "Part One")
+
+
+# first_steps
+# |> Enum.map(&Day7.construct_next_step(&1, input))
+# |> List.flatten
+# |> Enum.uniq
+# |> Enum.reverse
+# |> Enum.join("")
+# |> IO.inspect(label: "Part One")
+
+#  -->A--->F--
+# /    \      \
+# C      -->D----->E
+# \           /
+#  ---->B-----
+# CABDFE
