@@ -2,13 +2,14 @@
 
 defmodule Day7 do
 
-  def prerequisite(steps, prereqs), do: prerequisite(steps, prereqs, [])
-
   def prerequisite(steps, [{before_step, after_step} | rest], done ) do
     index_before_step = Enum.find_index(steps, fn (e) -> e == before_step end)
     index_after_step = Enum.find_index(steps, fn (e) -> e == after_step end)
     if index_before_step > index_after_step do
-      not_after = done
+      # Move the after step after the index_before_step and any letters that are alphabetically first.
+
+      # Find every step that *has* to be after our current step
+      not_after = done ++ rest
       |> Enum.filter(fn ({b, _a}) -> b == after_step end)
       |> Enum.map(&(elem(&1, 1)))
       |> MapSet.new
@@ -23,6 +24,7 @@ defmodule Day7 do
 
   def prerequisite(steps, [], _) do
     steps
+    |> Enum.reject(&(&1 == ""))
   end
 
   def insert_alphabetically(steps, index, step, not_after) do
@@ -38,6 +40,24 @@ defmodule Day7 do
         List.insert_at(steps, index, step)
     end
   end
+
+  def validate(steps, [{before_step, after_step} | rest]) do
+    index_before_step = Enum.find_index(steps, fn (e) -> e == before_step end)
+    index_after_step = Enum.find_index(steps, fn (e) -> e == after_step end)
+    if index_after_step < index_before_step do
+      # raise Exception.format(:validation, {{before_step, after_step}, steps})
+    end
+    validate(steps, rest)
+  end
+  def validate(_steps, []), do: :ok
+
+  def order(steps, prereqs) do
+    steps = prerequisite(steps, prereqs, [])
+    case validate(steps, prereqs) do
+      :ok -> steps
+      _ -> order(steps, prereqs)
+    end
+  end
 end
 
 input = File.stream!("day_07_input.txt")
@@ -49,6 +69,8 @@ input = File.stream!("day_07_input.txt")
     end).()
   end)
   |> Enum.to_list
+  # |> Enum.sort_by(fn ({a, b}) -> {b, a} end)
+  |> IO.inspect
 
 all_steps =
   input
@@ -58,23 +80,17 @@ all_steps =
   |> Enum.sort
   |> IO.inspect(label: "All steps")
 
-Day7.prerequisite(all_steps, input)
-|> Day7.prerequisite(input)
+# before_order =
+#   input
+#   |> Enum.group_by(&(elem(&1, 0)), &(elem(&1, 1)))
+#   # |> IO.inspect(label: "Part One")
+
+# after_order =
+#   input
+#   |> Enum.group_by(&(elem(&1, 1)), &(elem(&1, 0)))
+#   # |> IO.inspect(label: "Part One")
+
+
+Day7.order(all_steps, input)
 |> Enum.join("")
 |> IO.inspect(label: "Part One")
-
-
-# first_steps
-# |> Enum.map(&Day7.construct_next_step(&1, input))
-# |> List.flatten
-# |> Enum.uniq
-# |> Enum.reverse
-# |> Enum.join("")
-# |> IO.inspect(label: "Part One")
-
-#  -->A--->F--
-# /    \      \
-# C      -->D----->E
-# \           /
-#  ---->B-----
-# CABDFE
