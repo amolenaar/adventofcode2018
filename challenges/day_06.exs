@@ -38,12 +38,12 @@ point_and_closest_coordinate =
     _ -> true
   end)
   |> Enum.map(fn {p, dist_coord} ->
-    {p, dist_coord
+    coord = dist_coord
     |> hd()
-    |> Enum.at(1)}
+    |> Enum.at(1)
+    {p, coord}
   end)
 
-# filter infinite
 infinite_coordinates =
   point_and_closest_coordinate
   |> Enum.filter(fn {{x, y}, _coord} ->
@@ -54,10 +54,19 @@ infinite_coordinates =
 point_and_closest_coordinate
 |> Enum.group_by(fn {_, coord} -> coord end)
 |> Enum.reject(fn {coord, _} -> MapSet.member?(infinite_coordinates, coord) end)
-# |> Enum.group_by(fn {_xy, coord} -> coord end)
 |> Enum.map(fn {_coord, points} ->
-  points |> Enum.count
+  points |> Enum.count()
 end)
-|> Enum.sort
-|> List.last
+|> Enum.max()
 |> IO.inspect(label: "Part One")
+
+
+for x <- x_min..x_max,
+    y <- y_min..y_max,
+    [cx, cy] <- input do
+  {{x, y}, abs(x - cx) + abs(y - cy)}
+end
+|> Enum.group_by(&(elem(&1, 0)), &(elem(&1, 1)))
+|> Enum.filter(fn {_xy, dists} -> Enum.sum(dists) < 10_000 end)
+|> Enum.count()
+|> IO.inspect(label: "Part Two")
