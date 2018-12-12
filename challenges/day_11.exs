@@ -22,7 +22,7 @@ defmodule Day11 do
   def total_power(grid, {x, y}, size) do
     for ix <- 0..(size - 1),
         iy <- 0..(size - 1) do
-      Map.get(grid, {x + ix, y + iy})
+      grid[{x + ix, y + iy}]
     end
     |> Enum.sum()
   end
@@ -33,6 +33,7 @@ defmodule Day11 do
       {{x, y}, total_power(grid, {x, y}, size), size}
     end
     |> Enum.max_by(fn {_, p, _} -> p end)
+    |> IO.inspect(label: "Power for #{size}")
   end
 
   def largest_total_power_for_any_size(grid) do
