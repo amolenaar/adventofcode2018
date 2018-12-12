@@ -28,16 +28,16 @@ defmodule Day11 do
   end
 
   def largest_total_power(grid, size \\ 3) do
-    for x <- 1..(300 - size),
-        y <- 1..(300 - size) do
+    for x <- 1..(301 - size),
+        y <- 1..(301 - size) do
       {{x, y}, total_power(grid, {x, y}, size), size}
     end
     |> Enum.max_by(fn {_, p, _} -> p end)
   end
 
   def largest_total_power_for_any_size(grid) do
-    for size <- 1..298 do
-      largest_total_power(grid, size)
+    for size <- 1..300 do
+        largest_total_power(grid, size)
     end
     |> Enum.max_by(fn {_, p, _} -> p end)
   end
