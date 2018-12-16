@@ -82,7 +82,7 @@ defmodule Day12 do
     end
   end
 
-  def update([s1, s2, s3, s4, s5 | _]=gen, spread, next_gen) do
+  def update([s1, s2, s3, s4, s5 | _rest]=gen, spread, next_gen) do
     update(tl(gen), spread,
       [Map.get(spread, [s1, s2, s3, s4, s5], ?.) | next_gen])
   end
